@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/pedido.dart';
 import '../services/carrinho_service.dart';
+import '../services/pedido_service.dart';
 import '../widgets/cabecalho_loja.dart';
 import 'carrinho_screen.dart';
 import 'catalogo_screen.dart';
@@ -32,9 +33,13 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _irPara(int aba) {
-    // Ao abrir o carrinho, busca de novo: ele pode ter mudado pelo site.
-    if (aba == _abaCarrinho && aba != _aba) {
-      CarrinhoService.instance.carregar();
+    // Ao abrir o carrinho ou o perfil, busca de novo: pode ter mudado pelo site ou na loja.
+    if (aba != _aba) {
+      if (aba == _abaCarrinho) {
+        CarrinhoService.instance.carregar();
+      } else if (aba == _abaPerfil) {
+        PedidoService.instance.carregar();
+      }
     }
 
     setState(() => _aba = aba);
@@ -64,9 +69,9 @@ class _HomeScreenState extends State<HomeScreen> {
             child: IndexedStack(
               index: _aba,
               children: [
-                CatalogoScreen(aoVerCarrinho: () => _irPara(_abaCarrinho)),
+                const CatalogoScreen(),
                 CarrinhoScreen(aoVerProdutos: () => _irPara(_abaInicio), aoFinalizar: _mostrarPedido),
-                const PerfilScreen(),
+                PerfilScreen(aoVerProdutos: () => _irPara(_abaInicio)),
               ],
             ),
           ),

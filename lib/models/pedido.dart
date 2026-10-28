@@ -53,6 +53,13 @@ class Pedido {
       };
 
   int get quantidadeItens => itens.fold(0, (soma, item) => soma + item.itemPedidoQtd);
+
+  /// O cliente pode cancelar até 24 horas após a compra, enquanto não retirou (regra da API).
+  bool get podeCancelar =>
+      status.emAndamento && DateTime.now().isBefore(pedidoData.add(const Duration(hours: 24)));
+
+  /// Até quando dá para retirar um pedido separado.
+  DateTime? get limiteRetirada => pedidoDataSeparado?.add(const Duration(hours: 24));
 }
 
 class ItemPedido {

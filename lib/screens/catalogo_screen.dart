@@ -20,10 +20,7 @@ import '../widgets/produto_card.dart';
 ///
 /// O catálogo é carregado uma vez e filtrado no próprio app.
 class CatalogoScreen extends StatefulWidget {
-  /// Abre a aba do carrinho (usado no aviso "adicionado ao carrinho").
-  final VoidCallback? aoVerCarrinho;
-
-  const CatalogoScreen({super.key, this.aoVerCarrinho});
+  const CatalogoScreen({super.key});
 
   @override
   State<CatalogoScreen> createState() => _CatalogoScreenState();
@@ -208,22 +205,7 @@ class _CatalogoScreenState extends State<CatalogoScreen> {
       return false;
     }
 
-    if (mounted) {
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(
-          content: Text('${produto.produtoNome} adicionado ao carrinho.'),
-          duration: const Duration(seconds: 2),
-          action: widget.aoVerCarrinho == null
-              ? null
-              : SnackBarAction(
-                  label: 'VER',
-                  textColor: CoresPolar.azulGelo,
-                  onPressed: widget.aoVerCarrinho!,
-                ),
-        ));
-    }
-
+    // Sem aviso de sucesso: o próprio botão vira "Adicionado" e o selo do carrinho atualiza.
     return true;
   }
 

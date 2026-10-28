@@ -20,3 +20,9 @@ String normalizarTexto(String? texto) {
 
   return buffer.toString();
 }
+
+/// 28/10/2026
+String formatarData(DateTime data) => DateFormat('dd/MM/yyyy', 'pt_BR').format(data);
+
+/// 28/10/2026 às 12:15
+String formatarDataHora(DateTime data) => DateFormat("dd/MM/yyyy 'às' HH:mm", 'pt_BR').format(data);
