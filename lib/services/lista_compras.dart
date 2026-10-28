@@ -18,6 +18,9 @@ class ListaCompras extends ChangeNotifier {
 
   bool get estaVazia => _itens.isEmpty;
 
+  /// Soma das quantidades (usada no selo do ícone do carrinho).
+  int get quantidadeTotal => _itens.fold(0, (soma, item) => soma + item.quantidade);
+
   ItemLista? _buscarItem(int produtoID) {
     for (final item in _itens) {
       if (item.produtoID == produtoID) return item;

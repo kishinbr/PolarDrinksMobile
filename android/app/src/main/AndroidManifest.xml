@@ -1,6 +1,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Necessário para o app falar com a API também no APK de release
+         (o manifesto de debug já tinha, por isso funcionava só no flutter run). -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+
     <application
-    android:label="polardrinks"
+    android:label="Polar Drinks"
     android:name="${applicationName}"
     android:icon="@mipmap/ic_launcher"
     android:networkSecurityConfig="@xml/network_security_config">

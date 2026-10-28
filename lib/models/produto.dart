@@ -23,22 +23,35 @@ class Produto {
 
   factory Produto.fromJson(Map<String, dynamic> json) {
     return Produto(
-      produtoID: json['produtoID'],
-      produtoNome: json['produtoNome'],
-      produtoDescricao: json['produtoDescricao'],
-      produtoPrecoVenda: (json['produtoPrecoVenda'] as num).toDouble(),
-      produtoPromocao: (json['produtoPromocao'] as num).toDouble(),
-      produtoImagemUrl: json['produtoImagemUrl'],
-      produtoQtdEstoque: json['produtoQtdEstoque'],
-      estoqueDisponivelOnline: json['estoqueDisponivelOnline'],
-      categorias: List<String>.from(json['categorias']),
+      produtoID: json['produtoID'] as int,
+      produtoNome: (json['produtoNome'] ?? '') as String,
+      produtoDescricao: json['produtoDescricao'] as String?,
+      produtoPrecoVenda: (json['produtoPrecoVenda'] as num? ?? 0).toDouble(),
+      produtoPromocao: (json['produtoPromocao'] as num? ?? 0).toDouble(),
+      produtoImagemUrl: json['produtoImagemUrl'] as String?,
+      produtoQtdEstoque: (json['produtoQtdEstoque'] as num? ?? 0).toInt(),
+      estoqueDisponivelOnline: (json['estoqueDisponivelOnline'] as num? ?? 0).toInt(),
+      categorias: List<String>.from(json['categorias'] ?? const []),
     );
   }
 
+  bool get temPromocao => produtoPromocao > 0 && produtoPromocao <= 100;
+
+  /// Preço com promoção, com o mesmo arredondamento do servidor (2 casas).
+  /// É só para exibir: o valor cobrado é sempre o calculado pela API.
   double get precoFinal {
-    if (produtoPromocao > 0) {
-      return produtoPrecoVenda - (produtoPrecoVenda * (produtoPromocao / 100));
-    }
-    return produtoPrecoVenda;
+    final base = produtoPrecoVenda < 0 ? 0.0 : produtoPrecoVenda;
+    final valor = temPromocao ? base - base * (produtoPromocao / 100) : base;
+    return (valor * 100).round() / 100;
   }
+
+  bool get esgotado => produtoQtdEstoque <= 0;
+
+  /// Tem na loja física, mas a parte reservada para o online acabou.
+  bool get somenteNaLoja => !esgotado && estoqueDisponivelOnline <= 0;
+
+  bool get disponivelOnline => !esgotado && !somenteNaLoja;
+
+  /// Poucas unidades para pedir online (mostra o selo "Últimas N").
+  bool get ultimasUnidades => disponivelOnline && estoqueDisponivelOnline <= 3;
 }

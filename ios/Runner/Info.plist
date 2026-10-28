@@ -7,7 +7,13 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Polardrinks</string>
+	<string>Polar Drinks</string>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<!-- Permite HTTP só para localhost no simulador (API rodando no Mac). Em produção use HTTPS. -->
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
