@@ -1,2 +1,3 @@
-# PolarDrinksMobile
+# polardrinks
 
+A new Flutter project.
