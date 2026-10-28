@@ -4,6 +4,7 @@ import '../core/api_client.dart';
 import '../models/pedido.dart';
 import 'auth_service.dart';
 import 'carrinho_service.dart';
+import 'catalogo_service.dart';
 
 /// Pedidos do cliente na API (/api/pedidos): finalizar compra, listar, ver detalhe e cancelar.
 class PedidoService extends ChangeNotifier {
@@ -75,13 +76,15 @@ class PedidoService extends ChangeNotifier {
       final pedido = Pedido.fromJson(dados as Map<String, dynamic>);
 
       CarrinhoService.instance.marcarComoVazio();
+      CatalogoService.avisarEstoqueAlterado();
       _pedidos = [pedido, ..._pedidos];
       notifyListeners();
 
       return pedido;
     } on ApiException {
-      // Algo mudou (estoque, produto desativado): atualiza o carrinho para o cliente ver.
+      // Algo mudou (estoque, produto desativado): atualiza carrinho e catálogo para o cliente ver.
       CarrinhoService.instance.carregar();
+      CatalogoService.avisarEstoqueAlterado();
       rethrow;
     }
   }
@@ -90,6 +93,7 @@ class PedidoService extends ChangeNotifier {
   /// O servidor devolve os produtos ao estoque.
   Future<Pedido> cancelar(int pedidoId) async {
     await _api.post('/api/pedidos/$pedidoId/cancelar');
+    CatalogoService.avisarEstoqueAlterado();
     return obter(pedidoId);
   }
 

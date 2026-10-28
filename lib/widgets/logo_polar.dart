@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../core/tema.dart';
 
-/// Urso + "polardrinks", igual ao logo do site.
+/// Urso + "Polar Drinks".
 class LogoPolar extends StatelessWidget {
   final double tamanho;
 
@@ -18,8 +18,8 @@ class LogoPolar extends StatelessWidget {
         Text.rich(
           TextSpan(
             children: const [
-              TextSpan(text: 'polar'),
-              TextSpan(text: 'drinks', style: TextStyle(color: CoresPolar.azul)),
+              TextSpan(text: 'Polar '),
+              TextSpan(text: 'Drinks', style: TextStyle(color: CoresPolar.azul)),
             ],
             style: TextStyle(
               fontSize: tamanho,

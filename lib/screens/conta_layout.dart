@@ -21,7 +21,7 @@ class ContaLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Ícones escuros na barra de status (o resto do app usa a faixa azul com ícones claros).
+    // Ícones escuros na barra de status (hora, bateria) sobre o fundo claro.
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark.copyWith(statusBarColor: Colors.transparent),
       child: Scaffold(

@@ -1,8 +1,16 @@
+import 'package:flutter/foundation.dart';
+
 import '../core/api_client.dart';
 import '../models/categoria.dart';
 import '../models/produto.dart';
 
 class CatalogoService {
+  /// Muda de valor quando o estoque pode ter mudado (pedido feito, recusado ou cancelado).
+  /// O catálogo escuta e recarrega sozinho, sem o cliente precisar puxar a tela.
+  static final ValueNotifier<int> estoqueAlterado = ValueNotifier(0);
+
+  static void avisarEstoqueAlterado() => estoqueAlterado.value++;
+
   final ApiClient _api = ApiClient.instance;
 
   /// Catálogo completo de produtos ativos. Os filtros da tela são aplicados no próprio app.

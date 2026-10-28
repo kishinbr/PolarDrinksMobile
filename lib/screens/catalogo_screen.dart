@@ -1,9 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 
-import '../config/api_config.dart';
 import '../core/api_client.dart';
 import '../core/tema.dart';
 import '../models/categoria.dart';
@@ -15,8 +13,8 @@ import '../widgets/componentes.dart';
 import '../widgets/filtros_sheet.dart';
 import '../widgets/produto_card.dart';
 
-/// Página inicial da loja: igual à loja web (menu de categorias, banner, categorias,
-/// produtos com filtros, como funciona e perguntas frequentes).
+/// Página inicial da loja: menu de categorias, busca, produtos com filtros,
+/// como funciona e perguntas frequentes.
 ///
 /// O catálogo é carregado uma vez e filtrado no próprio app.
 class CatalogoScreen extends StatefulWidget {
@@ -32,7 +30,6 @@ class _CatalogoScreenState extends State<CatalogoScreen> {
   final CatalogoService _service = CatalogoService();
   final ScrollController _rolagem = ScrollController();
   final TextEditingController _busca = TextEditingController();
-  final GlobalKey _chaveProdutos = GlobalKey();
 
   List<Produto> _todos = [];
   List<Categoria> _categorias = [];
@@ -49,10 +46,12 @@ class _CatalogoScreenState extends State<CatalogoScreen> {
   void initState() {
     super.initState();
     _carregar();
+    CatalogoService.estoqueAlterado.addListener(_carregar);
   }
 
   @override
   void dispose() {
+    CatalogoService.estoqueAlterado.removeListener(_carregar);
     _atrasoBusca?.cancel();
     _rolagem.dispose();
     _busca.dispose();
@@ -173,24 +172,6 @@ class _CatalogoScreenState extends State<CatalogoScreen> {
     }
   }
 
-  /// Rola até "Nossos produtos", descontando o menu de categorias fixo no topo.
-  void _rolarParaProdutos() {
-    final contexto = _chaveProdutos.currentContext;
-    if (contexto == null || !_rolagem.hasClients) return;
-
-    final caixa = contexto.findRenderObject();
-    if (caixa == null) return;
-
-    final viewport = RenderAbstractViewport.of(caixa);
-    final destino = viewport.getOffsetToReveal(caixa, 0).offset - _alturaMenu - 8;
-
-    _rolagem.animateTo(
-      destino.clamp(0.0, _rolagem.position.maxScrollExtent).toDouble(),
-      duration: const Duration(milliseconds: 450),
-      curve: Curves.easeInOut,
-    );
-  }
-
   /// Adiciona 1 unidade ao carrinho da API. O servidor confere o estoque e,
   /// se não der, devolve a mensagem (ex.: "Apenas 2 unidade(s) de ... disponíveis.").
   Future<bool> _adicionar(Produto produto) async {
@@ -289,18 +270,6 @@ class _CatalogoScreenState extends State<CatalogoScreen> {
     final visiveis = _visiveis;
 
     return [
-      if (_modoVitrine) ...[
-        SliverToBoxAdapter(child: _Banner(aoVerProdutos: _rolarParaProdutos)),
-        if (_categorias.isNotEmpty) ...[
-          const SliverToBoxAdapter(
-            child: _TituloSecao(
-              titulo: 'Navegue por categoria',
-              subtitulo: 'Encontre rápido o que falta na sua festa.',
-            ),
-          ),
-          _gradeCategorias(),
-        ],
-      ],
       SliverToBoxAdapter(child: _cabecalhoProdutos(visiveis.length)),
       if (visiveis.isEmpty)
         SliverToBoxAdapter(
@@ -352,8 +321,7 @@ class _CatalogoScreenState extends State<CatalogoScreen> {
         : textoQuantidade;
 
     return Padding(
-      key: _chaveProdutos,
-      padding: EdgeInsets.fromLTRB(16, _modoVitrine ? 40 : 20, 16, 18),
+      padding: const EdgeInsets.fromLTRB(16, 22, 16, 18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -456,43 +424,6 @@ class _CatalogoScreenState extends State<CatalogoScreen> {
       ),
     );
   }
-
-  Widget _gradeCategorias() {
-    final categorias = _categorias.take(8).toList();
-
-    return SliverPadding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      sliver: SliverLayoutBuilder(
-        builder: (context, restricoes) {
-          final colunas = restricoes.crossAxisExtent >= 600 ? 4 : 2;
-
-          return SliverGrid(
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: colunas,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-              mainAxisExtent: 156,
-            ),
-            delegate: SliverChildBuilderDelegate(
-              (context, i) {
-                final categoria = categorias[i];
-                final comFoto = _todos
-                    .where((p) => p.produtoImagemUrl != null && p.categorias.contains(categoria.categoriaNome))
-                    .firstOrNull;
-
-                return _BlocoCategoria(
-                  nome: categoria.categoriaNome,
-                  urlImagem: ApiConfig.urlImagem(comFoto?.produtoImagemUrl),
-                  aoTocar: () => _selecionarCategoria(categoria.categoriaID),
-                );
-              },
-              childCount: categorias.length,
-            ),
-          );
-        },
-      ),
-    );
-  }
 }
 
 // =====================================================================
@@ -580,99 +511,6 @@ class _MenuCategorias extends SliverPersistentHeaderDelegate {
       antigo.selecionada != selecionada || antigo.categorias != categorias || antigo.altura != altura;
 }
 
-class _Banner extends StatelessWidget {
-  final VoidCallback aoVerProdutos;
-
-  const _Banner({required this.aoVerProdutos});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(TemaPolar.raioGrande),
-        child: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [CoresPolar.azulNoite, CoresPolar.azulProfundo, CoresPolar.azul],
-              stops: [0, 0.55, 1],
-            ),
-          ),
-          child: Stack(
-            children: [
-              Positioned(
-                right: -18,
-                bottom: -22,
-                child: Image.asset('assets/images/urso.png', width: 132),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(24, 28, 24, 32),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.14),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: const Text(
-                        'RETIRADA NA LOJA',
-                        style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 2),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'PEÇA ONLINE.\nRETIRE GELADO.',
-                      style: TextStyle(
-                        fontFamily: 'Montserrat',
-                        color: Colors.white,
-                        fontSize: 31,
-                        fontWeight: FontWeight.w900,
-                        height: 1.04,
-                        letterSpacing: -0.8,
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    Text(
-                      'Escolha suas bebidas, pague por Pix ou cartão e retire na loja com o seu código de 4 dígitos.',
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.82),
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        height: 1.5,
-                      ),
-                    ),
-                    const SizedBox(height: 22),
-                    FilledButton(
-                      onPressed: aoVerProdutos,
-                      style: FilledButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: CoresPolar.azulNoite,
-                        minimumSize: const Size(0, 48),
-                      ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text('VER PRODUTOS'),
-                          SizedBox(width: 8),
-                          Icon(Icons.arrow_downward, size: 17),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _TituloSecao extends StatelessWidget {
   final String titulo;
   final String? subtitulo;
@@ -692,77 +530,6 @@ class _TituloSecao extends StatelessWidget {
             Text(subtitulo!, style: TextosPolar.subtitulo),
           ],
         ],
-      ),
-    );
-  }
-}
-
-class _BlocoCategoria extends StatelessWidget {
-  final String nome;
-  final String? urlImagem;
-  final VoidCallback aoTocar;
-
-  const _BlocoCategoria({required this.nome, required this.urlImagem, required this.aoTocar});
-
-  @override
-  Widget build(BuildContext context) {
-    final semImagem = urlImagem == null;
-
-    return Material(
-      color: semImagem ? CoresPolar.azulProfundo : CoresPolar.midia,
-      borderRadius: BorderRadius.circular(TemaPolar.raioGrande),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: aoTocar,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Center(
-                  child: semImagem
-                      ? Icon(Icons.local_bar_rounded, size: 40, color: Colors.white.withValues(alpha: 0.5))
-                      : Image.network(
-                          urlImagem!,
-                          fit: BoxFit.contain,
-                          color: CoresPolar.midia,
-                          colorBlendMode: BlendMode.multiply,
-                          errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-                        ),
-                ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                nome.toUpperCase(),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 0.3,
-                  color: semImagem ? Colors.white : CoresPolar.texto,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Row(
-                children: [
-                  Text(
-                    'VER PRODUTOS',
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1.3,
-                      color: semImagem ? CoresPolar.azulGelo : CoresPolar.azul,
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  Icon(Icons.arrow_forward, size: 12, color: semImagem ? CoresPolar.azulGelo : CoresPolar.azul),
-                ],
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
