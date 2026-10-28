@@ -5,7 +5,6 @@ import 'core/tema.dart';
 import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
 import 'services/auth_service.dart';
-import 'services/lista_compras.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -13,7 +12,6 @@ Future<void> main() async {
   await Future.wait([
     initializeDateFormatting('pt_BR'),
     AuthService.instance.carregar(),
-    ListaCompras.instance.carregar(),
   ]);
 
   runApp(const PolarDrinksApp());

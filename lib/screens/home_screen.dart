@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../services/lista_compras.dart';
+import '../services/carrinho_service.dart';
 import '../widgets/cabecalho_loja.dart';
 import 'carrinho_screen.dart';
 import 'catalogo_screen.dart';
@@ -15,9 +15,26 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  static const _abaCarrinho = 1;
+
   int _aba = 0;
 
-  void _irPara(int aba) => setState(() => _aba = aba);
+  @override
+  void initState() {
+    super.initState();
+    // Carrega o carrinho do servidor ao entrar (para o selo do ícone já mostrar a quantidade).
+    // Depois do primeiro quadro, para não notificar telas no meio da montagem.
+    WidgetsBinding.instance.addPostFrameCallback((_) => CarrinhoService.instance.carregar());
+  }
+
+  void _irPara(int aba) {
+    // Ao abrir o carrinho, busca de novo: ele pode ter mudado pelo site.
+    if (aba == _abaCarrinho && aba != _aba) {
+      CarrinhoService.instance.carregar();
+    }
+
+    setState(() => _aba = aba);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +47,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: IndexedStack(
               index: _aba,
               children: [
-                const CatalogoScreen(),
+                CatalogoScreen(aoVerCarrinho: () => _irPara(_abaCarrinho)),
                 CarrinhoScreen(aoVerProdutos: () => _irPara(0)),
                 const PerfilScreen(),
               ],
@@ -43,9 +60,10 @@ class _HomeScreenState extends State<HomeScreen> {
           border: Border(top: BorderSide(color: Color(0xFFE5E7EB))),
         ),
         child: ListenableBuilder(
-          listenable: ListaCompras.instance,
+          listenable: CarrinhoService.instance,
           builder: (context, _) {
-            final quantidade = ListaCompras.instance.quantidadeTotal;
+            final quantidade = CarrinhoService.instance.quantidadeTotal;
+            final rotulo = quantidade > 99 ? '99+' : '$quantidade';
 
             return NavigationBar(
               selectedIndex: _aba,
@@ -59,12 +77,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 NavigationDestination(
                   icon: Badge(
                     isLabelVisible: quantidade > 0,
-                    label: Text(quantidade > 99 ? '99+' : '$quantidade'),
+                    label: Text(rotulo),
                     child: const Icon(Icons.shopping_bag_outlined),
                   ),
                   selectedIcon: Badge(
                     isLabelVisible: quantidade > 0,
-                    label: Text(quantidade > 99 ? '99+' : '$quantidade'),
+                    label: Text(rotulo),
                     child: const Icon(Icons.shopping_bag),
                   ),
                   label: 'Carrinho',

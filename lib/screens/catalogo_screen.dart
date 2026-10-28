@@ -10,7 +10,7 @@ import '../models/categoria.dart';
 import '../models/filtros_catalogo.dart';
 import '../models/produto.dart';
 import '../services/catalogo_service.dart';
-import '../services/lista_compras.dart';
+import '../services/carrinho_service.dart';
 import '../widgets/componentes.dart';
 import '../widgets/filtros_sheet.dart';
 import '../widgets/produto_card.dart';
@@ -20,7 +20,10 @@ import '../widgets/produto_card.dart';
 ///
 /// O catálogo é carregado uma vez e filtrado no próprio app.
 class CatalogoScreen extends StatefulWidget {
-  const CatalogoScreen({super.key});
+  /// Abre a aba do carrinho (usado no aviso "adicionado ao carrinho").
+  final VoidCallback? aoVerCarrinho;
+
+  const CatalogoScreen({super.key, this.aoVerCarrinho});
 
   @override
   State<CatalogoScreen> createState() => _CatalogoScreenState();
@@ -191,16 +194,33 @@ class _CatalogoScreenState extends State<CatalogoScreen> {
     );
   }
 
+  /// Adiciona 1 unidade ao carrinho da API. O servidor confere o estoque e,
+  /// se não der, devolve a mensagem (ex.: "Apenas 2 unidade(s) de ... disponíveis.").
   Future<bool> _adicionar(Produto produto) async {
-    // Fase 1: guarda na lista local. Na fase 2 isto passa a usar o carrinho da API.
-    await ListaCompras.instance.adicionar(produto);
+    try {
+      await CarrinhoService.instance.adicionar(produto.produtoID);
+    } on ApiException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(SnackBar(content: Text(e.mensagem)));
+      }
+      return false;
+    }
 
     if (mounted) {
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(SnackBar(
-          content: Text('${produto.produtoNome} adicionado.'),
-          duration: const Duration(milliseconds: 1500),
+          content: Text('${produto.produtoNome} adicionado ao carrinho.'),
+          duration: const Duration(seconds: 2),
+          action: widget.aoVerCarrinho == null
+              ? null
+              : SnackBarAction(
+                  label: 'VER',
+                  textColor: CoresPolar.azulGelo,
+                  onPressed: widget.aoVerCarrinho!,
+                ),
         ));
     }
 
