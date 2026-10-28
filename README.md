@@ -35,12 +35,13 @@ lib/
 │   ├── api_client.dart       todas as chamadas HTTP: token, erros e sessão expirada
 │   ├── tema.dart             cores, fontes e estilos (iguais aos da loja web)
 │   └── formatadores.dart     preço em reais e busca sem acento
-├── models/                   Produto, Categoria, Carrinho, filtros do catálogo
+├── models/                   Produto, Categoria, Carrinho, Pedido, filtros do catálogo
 ├── services/
 │   ├── auth_service.dart     login, cadastro e token (armazenamento seguro)
 │   ├── catalogo_service.dart produtos e categorias
-│   └── carrinho_service.dart carrinho do cliente na API (o mesmo da loja web)
-├── screens/                  login, cadastro, abas Início / Carrinho / Perfil
+│   ├── carrinho_service.dart carrinho do cliente na API (o mesmo da loja web)
+│   └── pedido_service.dart   finalizar compra (e, na fase 4, listar e cancelar pedidos)
+├── screens/                  login, cadastro, abas Início / Carrinho / Perfil, pedido confirmado
 └── widgets/                  cabeçalho, card de produto, filtros e componentes
 ```
 
@@ -48,5 +49,5 @@ lib/
 
 - [x] **Fase 1:** login, cadastro, catálogo com busca, categorias e filtros, navegação e tema
 - [x] **Fase 2:** carrinho pela API (adicionar, quantidade, remover, total)
-- [ ] **Fase 3:** checkout com Pix ou cartão e código de retirada
+- [x] **Fase 3:** checkout com Pix ou cartão e código de retirada
 - [ ] **Fase 4:** meus pedidos, detalhe e cancelamento

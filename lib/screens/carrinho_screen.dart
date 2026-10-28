@@ -5,15 +5,20 @@ import '../core/api_client.dart';
 import '../core/formatadores.dart';
 import '../core/tema.dart';
 import '../models/carrinho.dart';
+import '../models/pedido.dart';
 import '../services/carrinho_service.dart';
+import '../services/pedido_service.dart';
 import '../widgets/componentes.dart';
 
-/// Aba do carrinho: itens com quantidade, remover, total e esvaziar.
+/// Aba do carrinho: itens com quantidade, remover, total, forma de pagamento e finalizar.
 /// Tudo vem da API, igual à página "Meu carrinho" da loja web.
 class CarrinhoScreen extends StatelessWidget {
   final VoidCallback aoVerProdutos;
 
-  const CarrinhoScreen({super.key, required this.aoVerProdutos});
+  /// Chamado com o pedido criado depois de finalizar a compra.
+  final ValueChanged<Pedido> aoFinalizar;
+
+  const CarrinhoScreen({super.key, required this.aoVerProdutos, required this.aoFinalizar});
 
   @override
   Widget build(BuildContext context) {
@@ -92,7 +97,7 @@ class CarrinhoScreen extends StatelessWidget {
             ocupado: servico.estaOcupado(item.produtoID),
           ),
         const SizedBox(height: 28),
-        _Resumo(carrinho: carrinho, aoContinuar: aoVerProdutos),
+        _Resumo(carrinho: carrinho, aoContinuar: aoVerProdutos, aoFinalizar: aoFinalizar),
       ],
     ];
   }
@@ -269,13 +274,45 @@ class _ControleQuantidade extends StatelessWidget {
   }
 }
 
-class _Resumo extends StatelessWidget {
+class _Resumo extends StatefulWidget {
   final Carrinho carrinho;
   final VoidCallback aoContinuar;
+  final ValueChanged<Pedido> aoFinalizar;
 
-  const _Resumo({required this.carrinho, required this.aoContinuar});
+  const _Resumo({required this.carrinho, required this.aoContinuar, required this.aoFinalizar});
 
-  Future<void> _confirmarEsvaziar(BuildContext context) async {
+  @override
+  State<_Resumo> createState() => _ResumoState();
+}
+
+class _ResumoState extends State<_Resumo> {
+  String? _pagamento;
+  bool _finalizando = false;
+
+  Future<void> _finalizar() async {
+    final pagamento = _pagamento;
+    if (pagamento == null) return;
+
+    // Guardado antes: com o carrinho vazio após o pedido, este resumo sai da tela.
+    final aoFinalizar = widget.aoFinalizar;
+
+    setState(() => _finalizando = true);
+
+    try {
+      final pedido = await PedidoService.instance.finalizarCompra(pagamento);
+      aoFinalizar(pedido);
+      if (mounted) setState(() => _pagamento = null);
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(e.mensagem), duration: const Duration(seconds: 4)));
+    } finally {
+      if (mounted) setState(() => _finalizando = false);
+    }
+  }
+
+  Future<void> _confirmarEsvaziar() async {
     final confirmar = await showDialog<bool>(
       context: context,
       builder: (contexto) => AlertDialog(
@@ -296,15 +333,19 @@ class _Resumo extends StatelessWidget {
       ),
     );
 
-    if (confirmar == true && context.mounted) {
+    if (confirmar == true && mounted) {
       await _executar(context, CarrinhoService.instance.limpar);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final carrinho = widget.carrinho;
     final quantidade = carrinho.quantidadeTotal;
-    final limpando = CarrinhoService.instance.limpando;
+    final servico = CarrinhoService.instance;
+
+    // Enquanto finaliza ou altera algum item, os outros botões ficam travados.
+    final ocupado = _finalizando || servico.limpando || carrinho.itens.any((i) => servico.estaOcupado(i.produtoID));
 
     return Container(
       padding: const EdgeInsets.all(22),
@@ -344,21 +385,58 @@ class _Resumo extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 20),
-          const Aviso(
-            'Na próxima etapa você escolhe Pix ou cartão e finaliza o pedido por aqui.',
-            tipo: TipoAviso.info,
+          const SizedBox(height: 22),
+          const Text(
+            'FORMA DE PAGAMENTO',
+            style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 2, color: CoresPolar.textoFraco),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: _BotaoPagamento(
+                  texto: 'Cartão',
+                  icone: Icons.credit_card,
+                  ativo: _pagamento == TipoPagamento.cartao,
+                  aoTocar: ocupado ? null : () => setState(() => _pagamento = TipoPagamento.cartao),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _BotaoPagamento(
+                  texto: 'Pix',
+                  icone: Icons.qr_code_2,
+                  ativo: _pagamento == TipoPagamento.pix,
+                  aoTocar: ocupado ? null : () => setState(() => _pagamento = TipoPagamento.pix),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          BotaoPrincipal(
+            texto: 'Finalizar compra',
+            carregando: _finalizando,
+            aoPressionar: _pagamento == null || ocupado ? null : _finalizar,
+          ),
+          if (_pagamento == null)
+            const Padding(
+              padding: EdgeInsets.only(top: 8),
+              child: Text(
+                'Escolha a forma de pagamento para continuar.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: CoresPolar.textoFraco),
+              ),
+            ),
+          const SizedBox(height: 12),
           OutlinedButton(
-            onPressed: aoContinuar,
+            onPressed: _finalizando ? null : widget.aoContinuar,
             child: const Text('CONTINUAR COMPRANDO'),
           ),
           const SizedBox(height: 8),
           TextButton.icon(
-            onPressed: limpando ? null : () => _confirmarEsvaziar(context),
+            onPressed: ocupado ? null : _confirmarEsvaziar,
             style: TextButton.styleFrom(foregroundColor: CoresPolar.textoFraco, minimumSize: const Size(0, 44)),
-            icon: limpando
+            icon: servico.limpando
                 ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
                 : const Icon(Icons.delete_outline, size: 18),
             label: const Text('ESVAZIAR CARRINHO'),
@@ -369,13 +447,56 @@ class _Resumo extends StatelessWidget {
             children: [
               Icon(Icons.storefront_outlined, size: 14, color: CoresPolar.textoFraco),
               SizedBox(width: 6),
-              Text(
-                'Retirada na loja com código de 4 dígitos.',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: CoresPolar.textoFraco),
+              Flexible(
+                child: Text(
+                  'Retirada na loja com código de 4 dígitos.',
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: CoresPolar.textoFraco),
+                ),
               ),
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _BotaoPagamento extends StatelessWidget {
+  final String texto;
+  final IconData icone;
+  final bool ativo;
+  final VoidCallback? aoTocar;
+
+  const _BotaoPagamento({required this.texto, required this.icone, required this.ativo, required this.aoTocar});
+
+  @override
+  Widget build(BuildContext context) {
+    final cor = ativo ? CoresPolar.azul : CoresPolar.texto;
+
+    return Material(
+      color: ativo ? CoresPolar.azulTinta : Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(TemaPolar.raio),
+        side: BorderSide(color: ativo ? CoresPolar.azul : CoresPolar.borda, width: 1.5),
+      ),
+      child: InkWell(
+        onTap: aoTocar,
+        customBorder: RoundedRectangleBorder(borderRadius: BorderRadius.circular(TemaPolar.raio)),
+        child: SizedBox(
+          height: 54,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icone, size: 19, color: cor),
+              const SizedBox(width: 8),
+              Text(texto, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: cor)),
+              if (ativo) ...[
+                const SizedBox(width: 6),
+                Icon(Icons.check_circle, size: 16, color: cor),
+              ],
+            ],
+          ),
+        ),
       ),
     );
   }

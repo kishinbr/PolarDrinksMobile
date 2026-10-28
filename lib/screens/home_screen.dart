@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '../models/pedido.dart';
 import '../services/carrinho_service.dart';
 import '../widgets/cabecalho_loja.dart';
 import 'carrinho_screen.dart';
 import 'catalogo_screen.dart';
+import 'pedido_confirmado_screen.dart';
 import 'perfil_screen.dart';
 
 /// Tela principal depois do login: cabeçalho da loja + três abas (Início, Carrinho, Perfil).
@@ -15,7 +17,9 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  static const _abaInicio = 0;
   static const _abaCarrinho = 1;
+  static const _abaPerfil = 2;
 
   int _aba = 0;
 
@@ -36,6 +40,19 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() => _aba = aba);
   }
 
+  /// Depois do checkout: abre a confirmação com o código e, ao fechar, vai para onde o cliente escolheu.
+  Future<void> _mostrarPedido(Pedido pedido) async {
+    final destino = await Navigator.of(context).push<DestinoAposPedido>(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (_) => PedidoConfirmadoScreen(pedido: pedido),
+      ),
+    );
+
+    if (!mounted) return;
+    _irPara(destino == DestinoAposPedido.pedidos ? _abaPerfil : _abaInicio);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -48,7 +65,7 @@ class _HomeScreenState extends State<HomeScreen> {
               index: _aba,
               children: [
                 CatalogoScreen(aoVerCarrinho: () => _irPara(_abaCarrinho)),
-                CarrinhoScreen(aoVerProdutos: () => _irPara(0)),
+                CarrinhoScreen(aoVerProdutos: () => _irPara(_abaInicio), aoFinalizar: _mostrarPedido),
                 const PerfilScreen(),
               ],
             ),
