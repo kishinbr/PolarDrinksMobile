@@ -9,7 +9,7 @@ import '../widgets/componentes.dart';
 import '../widgets/selo_status.dart';
 import 'pedido_detalhe_screen.dart';
 
-/// Aba do perfil: dados do cliente, pedidos em andamento e finalizados, e "Sair".
+/// Aba do perfil: dados do cliente com "Sair", e os pedidos em andamento e finalizados.
 class PerfilScreen extends StatelessWidget {
   /// Leva para o catálogo (quando ainda não há pedidos).
   final VoidCallback aoVerProdutos;
@@ -63,14 +63,8 @@ class PerfilScreen extends StatelessWidget {
               const SizedBox(height: 4),
               const Text('Acompanhe seus pedidos e consulte o código de retirada.', style: TextosPolar.subtitulo),
               const SizedBox(height: 24),
-              const _CartaoCliente(),
+              _CartaoCliente(aoSair: () => _confirmarSaida(context)),
               ..._pedidos(context, servico),
-              const SizedBox(height: 32),
-              OutlinedButton.icon(
-                onPressed: () => _confirmarSaida(context),
-                icon: const Icon(Icons.logout, size: 18),
-                label: const Text('SAIR DA CONTA'),
-              ),
             ],
           ),
         );
@@ -166,8 +160,12 @@ class PerfilScreen extends StatelessWidget {
   }
 }
 
+/// Dados do cliente com o botão de sair logo abaixo do nome
+/// (fica sempre à vista, mesmo com muitos pedidos na lista).
 class _CartaoCliente extends StatelessWidget {
-  const _CartaoCliente();
+  final VoidCallback aoSair;
+
+  const _CartaoCliente({required this.aoSair});
 
   @override
   Widget build(BuildContext context) {
@@ -204,6 +202,20 @@ class _CartaoCliente extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: CoresPolar.textoFraco),
                   ),
+                const SizedBox(height: 10),
+                OutlinedButton.icon(
+                  onPressed: aoSair,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: CoresPolar.textoSuave,
+                    backgroundColor: Colors.white,
+                    minimumSize: const Size(0, 34),
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    side: const BorderSide(color: CoresPolar.borda, width: 1.5),
+                    textStyle: const TextStyle(fontFamily: 'Poppins', fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 0.6),
+                  ),
+                  icon: const Icon(Icons.logout, size: 15),
+                  label: const Text('SAIR DA CONTA'),
+                ),
               ],
             ),
           ),

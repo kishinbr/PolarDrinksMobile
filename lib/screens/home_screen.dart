@@ -9,7 +9,7 @@ import 'catalogo_screen.dart';
 import 'pedido_confirmado_screen.dart';
 import 'perfil_screen.dart';
 
-/// Tela principal depois do login: cabeçalho da loja + três abas (Início, Carrinho, Perfil).
+/// Tela principal depois do login: cabeçalho da loja + três abas (Catálogo, Carrinho, Perfil).
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -94,7 +94,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 const NavigationDestination(
                   icon: Icon(Icons.storefront_outlined),
                   selectedIcon: Icon(Icons.storefront),
-                  label: 'Início',
+                  label: 'Catálogo',
                 ),
                 NavigationDestination(
                   icon: Badge(

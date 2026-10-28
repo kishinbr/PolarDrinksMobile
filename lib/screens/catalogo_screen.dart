@@ -13,8 +13,7 @@ import '../widgets/componentes.dart';
 import '../widgets/filtros_sheet.dart';
 import '../widgets/produto_card.dart';
 
-/// Página inicial da loja: menu de categorias, busca, produtos com filtros,
-/// como funciona e perguntas frequentes.
+/// Catálogo da loja: menu de categorias, busca e produtos com filtros.
 ///
 /// O catálogo é carregado uma vez e filtrado no próprio app.
 class CatalogoScreen extends StatefulWidget {
@@ -109,7 +108,7 @@ class _CatalogoScreenState extends State<CatalogoScreen> {
 
   List<Produto> get _visiveis => _filtros.aplicar(_todos, categoriaNome: _categoriaNome, termo: _termo);
 
-  /// Vitrine completa (banner, categorias, FAQ) só aparece sem categoria e sem busca.
+  /// Sem categoria e sem busca: mostra "Nossos produtos" (com categoria ou busca, o título muda).
   bool get _modoVitrine => _categoriaId == null && _termo.isEmpty;
 
   // ===== ações =====
@@ -293,14 +292,6 @@ class _CatalogoScreenState extends State<CatalogoScreen> {
         )
       else
         _gradeProdutos(visiveis),
-      if (_modoVitrine) ...[
-        const SliverToBoxAdapter(
-          child: _TituloSecao(titulo: 'Como funciona', subtitulo: 'Sem fila e sem espera no caixa.'),
-        ),
-        const SliverToBoxAdapter(child: _ComoFunciona()),
-        const SliverToBoxAdapter(child: _TituloSecao(titulo: 'Perguntas frequentes')),
-        const SliverToBoxAdapter(child: _PerguntasFrequentes()),
-      ],
     ];
   }
 
@@ -511,30 +502,6 @@ class _MenuCategorias extends SliverPersistentHeaderDelegate {
       antigo.selecionada != selecionada || antigo.categorias != categorias || antigo.altura != altura;
 }
 
-class _TituloSecao extends StatelessWidget {
-  final String titulo;
-  final String? subtitulo;
-
-  const _TituloSecao({required this.titulo, this.subtitulo});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 40, 16, 18),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(titulo.toUpperCase(), style: TextosPolar.titulo),
-          if (subtitulo != null) ...[
-            const SizedBox(height: 4),
-            Text(subtitulo!, style: TextosPolar.subtitulo),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
 /// Botão no lugar do painel lateral do site: "Refinar / Filtros".
 class _BotaoFiltros extends StatelessWidget {
   final String resumo;
@@ -634,130 +601,6 @@ class _CardEsqueleto extends StatelessWidget {
         barra(double.infinity),
         barra(60),
       ],
-    );
-  }
-}
-
-class _ComoFunciona extends StatelessWidget {
-  const _ComoFunciona();
-
-  static const _passos = [
-    (Icons.shopping_bag_outlined, 'Monte seu pedido', 'Adicione as bebidas ao carrinho e finalize com Pix ou cartão.'),
-    (Icons.inventory_2_outlined, 'A gente separa', 'Você recebe um código de retirada e acompanha o status no seu perfil.'),
-    (Icons.storefront_outlined, 'Retire na loja', 'Apresente o código e seu nome em até 24 horas após a separação.'),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Column(
-        children: [
-          for (final (icone, titulo, texto) in _passos)
-            Container(
-              width: double.infinity,
-              margin: const EdgeInsets.only(bottom: 12),
-              padding: const EdgeInsets.all(22),
-              decoration: BoxDecoration(
-                color: CoresPolar.fundoGelo,
-                borderRadius: BorderRadius.circular(TemaPolar.raioGrande),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: const BoxDecoration(color: CoresPolar.azul, shape: BoxShape.circle),
-                    child: Icon(icone, color: Colors.white, size: 21),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(titulo.toUpperCase(), style: TextosPolar.secao),
-                        const SizedBox(height: 4),
-                        Text(
-                          texto,
-                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: CoresPolar.textoFraco),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-class _PerguntasFrequentes extends StatelessWidget {
-  const _PerguntasFrequentes();
-
-  static const _perguntas = [
-    (
-      'Como retiro meu pedido?',
-      'Depois da compra você recebe um código de 4 dígitos. Quando o status mudar para "Pronto para retirada", vá até a loja e informe o código e o seu nome.'
-    ),
-    (
-      'Qual o prazo para retirar?',
-      'Você tem até 24 horas após a separação. Depois disso o pedido expira e os produtos voltam ao estoque.'
-    ),
-    (
-      'Posso cancelar um pedido?',
-      'Sim. No seu perfil, abra o pedido e cancele em até 24 horas após a compra, desde que ele ainda não tenha sido retirado.'
-    ),
-    ('Quais formas de pagamento são aceitas?', 'Pix e cartão.'),
-    (
-      'Por que alguns produtos aparecem como "Só na loja"?',
-      'Parte do estoque fica reservada para quem compra no balcão. Quando a quantidade disponível online acaba, o produto ainda pode estar à venda na loja física.'
-    ),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    final formato = RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(TemaPolar.raio),
-      side: const BorderSide(color: CoresPolar.borda),
-    );
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Column(
-        children: [
-          for (final (pergunta, resposta) in _perguntas)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: Theme(
-                data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-                child: ExpansionTile(
-                  shape: formato.copyWith(side: const BorderSide(color: CoresPolar.texto)),
-                  collapsedShape: formato,
-                  backgroundColor: Colors.white,
-                  collapsedBackgroundColor: Colors.white,
-                  iconColor: CoresPolar.texto,
-                  collapsedIconColor: CoresPolar.texto,
-                  tilePadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 2),
-                  childrenPadding: const EdgeInsets.fromLTRB(18, 0, 18, 18),
-                  expandedCrossAxisAlignment: CrossAxisAlignment.start,
-                  title: Text(
-                    pergunta,
-                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: CoresPolar.texto),
-                  ),
-                  children: [
-                    Text(
-                      resposta,
-                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: CoresPolar.textoFraco, height: 1.5),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-        ],
-      ),
     );
   }
 }

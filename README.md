@@ -41,7 +41,7 @@ lib/
 │   ├── catalogo_service.dart produtos e categorias
 │   ├── carrinho_service.dart carrinho do cliente na API (o mesmo da loja web)
 │   └── pedido_service.dart   finalizar compra, listar, detalhar e cancelar pedidos
-├── screens/                  login, cadastro, abas Início / Carrinho / Perfil, pedido confirmado e detalhe
+├── screens/                  login, cadastro, abas Catálogo / Carrinho / Perfil, pedido confirmado e detalhe
 └── widgets/                  cabeçalho, card de produto, filtros e componentes
 ```
 
