@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/api_client.dart';
+import '../core/mascaras.dart';
 import '../core/tema.dart';
 import '../services/auth_service.dart';
 import '../widgets/componentes.dart';
@@ -93,6 +94,7 @@ class _CadastroScreenState extends State<CadastroScreen> {
                 teclado: TextInputType.name,
                 autofill: const [AutofillHints.name],
                 textoErro: _marcar('nome'),
+                maxCaracteres: 100,
               ),
               CampoFormulario(
                 rotulo: 'E-mail',
@@ -102,6 +104,7 @@ class _CadastroScreenState extends State<CadastroScreen> {
                 teclado: TextInputType.emailAddress,
                 autofill: const [AutofillHints.email],
                 textoErro: _marcar('email'),
+                maxCaracteres: 150,
               ),
               CampoFormulario(
                 rotulo: 'Senha',
@@ -111,6 +114,7 @@ class _CadastroScreenState extends State<CadastroScreen> {
                 senha: true,
                 autofill: const [AutofillHints.newPassword],
                 textoErro: _marcar('senha'),
+                maxCaracteres: 64,
               ),
               CampoFormulario(
                 rotulo: 'Confirmar senha',
@@ -120,6 +124,7 @@ class _CadastroScreenState extends State<CadastroScreen> {
                 senha: true,
                 autofill: const [AutofillHints.newPassword],
                 textoErro: _marcar('confirmacaoSenha'),
+                maxCaracteres: 64,
               ),
               CampoFormulario(
                 rotulo: 'Telefone',
@@ -129,6 +134,7 @@ class _CadastroScreenState extends State<CadastroScreen> {
                 teclado: TextInputType.phone,
                 autofill: const [AutofillHints.telephoneNumber],
                 textoErro: _marcar('telefone'),
+                formatadores: [MascaraTelefone()],
               ),
               CampoFormulario(
                 rotulo: 'CPF',
@@ -139,6 +145,7 @@ class _CadastroScreenState extends State<CadastroScreen> {
                 acao: TextInputAction.done,
                 aoEnviar: (_) => _cadastrar(),
                 textoErro: _marcar('cpf'),
+                formatadores: [MascaraCpf()],
               ),
             ],
           ),

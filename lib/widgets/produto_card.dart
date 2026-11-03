@@ -140,7 +140,7 @@ class _FotoProduto extends StatelessWidget {
             fit: BoxFit.contain,
             color: CoresPolar.midia,
             colorBlendMode: BlendMode.multiply,
-            errorBuilder: (_, __, ___) => _reserva(),
+            errorBuilder: (_, _, _) => _reserva(),
             loadingBuilder: (context, filho, progresso) => progresso == null
                 ? filho
                 : const Center(

@@ -149,7 +149,7 @@ class _LinhaItem extends StatelessWidget {
                     fit: BoxFit.contain,
                     color: CoresPolar.midia,
                     colorBlendMode: BlendMode.multiply,
-                    errorBuilder: (_, __, ___) => Image.asset('assets/images/urso.png'),
+                    errorBuilder: (_, _, _) => Image.asset('assets/images/urso.png'),
                   ),
           ),
           const SizedBox(width: 14),

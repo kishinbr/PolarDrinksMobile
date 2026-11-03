@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../core/tema.dart';
 
@@ -14,6 +15,11 @@ class CampoFormulario extends StatefulWidget {
   final Iterable<String>? autofill;
   final ValueChanged<String>? aoEnviar;
   final String? textoErro;
+  /// Quantidade máxima de caracteres (opcional).
+  final int? maxCaracteres;
+
+  /// Máscaras/formatadores do campo (opcional), ex.: MascaraCpf().
+  final List<TextInputFormatter>? formatadores;
 
   const CampoFormulario({
     super.key,
@@ -27,6 +33,8 @@ class CampoFormulario extends StatefulWidget {
     this.autofill,
     this.aoEnviar,
     this.textoErro,
+    this.maxCaracteres,
+    this.formatadores,
   });
 
   @override
@@ -54,6 +62,10 @@ class _CampoFormularioState extends State<CampoFormulario> {
             onSubmitted: widget.aoEnviar,
             autocorrect: false,
             enableSuggestions: !widget.senha,
+            inputFormatters: [
+              if (widget.maxCaracteres != null) LengthLimitingTextInputFormatter(widget.maxCaracteres),
+              ...?widget.formatadores,
+            ],
             style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: CoresPolar.texto),
             decoration: InputDecoration(
               hintText: widget.dica,

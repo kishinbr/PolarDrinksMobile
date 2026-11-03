@@ -62,7 +62,7 @@ class PedidoConfirmadoScreen extends StatelessWidget {
             CaixaCodigo(codigo: pedido.pedidoCodigo),
             const SizedBox(height: 16),
             const Aviso(
-              'Apresente o código de retirada e o seu nome na loja para retirar o pedido. '
+              'Apresente esse código e o número do pedido na loja para retirar o pedido'
               'Você tem até 24 horas após a separação para retirar.',
               tipo: TipoAviso.info,
             ),

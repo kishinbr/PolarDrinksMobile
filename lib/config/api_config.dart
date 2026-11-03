@@ -1,28 +1,18 @@
-import 'dart:io' show Platform;
-
-import 'package:flutter/foundation.dart' show kIsWeb;
-
-/// Endereço da API do PolarDrinks.
-///
-/// - Emulador Android: http://10.0.2.2:5153 (o "localhost" do computador visto de dentro do emulador)
-/// - Simulador iOS / desktop: http://localhost:5153
-/// - Outro servidor (ex.: Azure): passe na hora de rodar ou compilar, sem mexer no código:
-///     flutter run --dart-define=API_URL=https://seu-app.azurewebsites.net
+/// Endereço da API do PolarDrinks, publicada no Azure Container Apps.
 class ApiConfig {
-  static const String _urlDefinida = String.fromEnvironment('API_URL');
+  static const String baseUrl =
+      'https://polardrinks-app.wittybeach-73617cd8.centralus.azurecontainerapps.io';
 
-  static String get baseUrl {
-    if (_urlDefinida.isNotEmpty) return _urlDefinida;
-    if (!kIsWeb && Platform.isAndroid) return 'http://10.0.2.2:5153';
-    return 'http://localhost:5153';
-  }
-
-  /// A API devolve o caminho da imagem relativo (ex.: "uploads/produtos/1.webp").
+  /// As imagens dos produtos ficam no Azure Blob Storage e a API já devolve
+  /// o link completo (https://...). Caminhos relativos continuam funcionando.
   static String? urlImagem(String? caminho) {
     if (caminho == null || caminho.isEmpty) return null;
     if (caminho.startsWith('http')) return caminho;
     return '$baseUrl/$caminho';
   }
 
-  static const Duration tempoLimite = Duration(seconds: 15);
+  /// Tempo máximo de espera por uma resposta da API.
+  /// É alto de propósito: quando ninguém usa o sistema, o servidor e o banco
+  /// "dormem" para economizar, e o primeiro acesso leva alguns segundos para acordá-los.
+  static const Duration tempoLimite = Duration(seconds: 60);
 }

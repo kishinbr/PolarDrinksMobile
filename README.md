@@ -1,36 +1,38 @@
 # Polar Drinks (app)
 
-App Flutter da loja online Polar Drinks. Usa a mesma API REST da loja web ([PolarDrink-v2](https://github.com/kishinbr/PolarDrink-v2)), sem nenhuma mudança no backend.
+App Flutter da loja online Polar Drinks. Usa a mesma API REST da loja web ([PolarDrink-v2](https://github.com/kishinbr/PolarDrink-v2)), publicada no Azure Container Apps.
 
 ## Como rodar
 
-1. Suba a API do PolarDrink-v2 (`dotnet run --project PolarDrinks`, em `http://localhost:5153`).
-2. Neste projeto:
+O app usa a API publicada na nuvem:
+
+```
+https://polardrinks-app.wittybeach-73617cd8.centralus.azurecontainerapps.io
+```
+
+O endereço fica em `lib/config/api_config.dart`. Não é preciso rodar a API no computador.
 
 ```bash
 flutter pub get
 flutter run
 ```
 
-O endereço da API é escolhido sozinho:
+> **Primeiro acesso mais lento:** quando ninguém usa o sistema, o servidor e o banco de dados "dormem" para economizar. O primeiro acesso depois disso pode levar de 20 a 40 segundos; os seguintes são imediatos. Por isso o tempo limite das requisições é de 60 segundos.
 
-| Onde o app roda | Endereço usado |
-|---|---|
-| Emulador Android | `http://10.0.2.2:5153` |
-| Simulador iOS / desktop | `http://localhost:5153` |
-
-Para usar outro servidor (por exemplo, o Azure), não precisa mudar código:
+### Gerar o APK (Android)
 
 ```bash
-flutter run --dart-define=API_URL=https://seu-app.azurewebsites.net
+flutter build apk --release
 ```
+
+O arquivo fica em `build/app/outputs/flutter-apk/app-release.apk`.
 
 ## Estrutura
 
 ```
 lib/
 ├── main.dart                 abre no login ou na loja, conforme a sessão
-├── config/api_config.dart    endereço da API e URL das imagens
+├── config/api_config.dart    endereço da API na nuvem, URL das imagens e tempo limite
 ├── core/
 │   ├── api_client.dart       todas as chamadas HTTP: token, erros e sessão expirada
 │   ├── tema.dart             cores, fontes e estilos (iguais aos da loja web)
